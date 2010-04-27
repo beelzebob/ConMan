@@ -171,34 +171,57 @@ def show_presentation_schedule(request, day=None, cat=None, location=None, audie
     extra = None
     roomImage = None
     date = datetime(1970, 01, 01)
+
+    #start with all presentations
+    presentations = Presentation.objects.all()
+    template = 'show_all_presentations.html'
+
+    #if we get a post, the user wants to save some presentations
+    if request.method == 'POST':
+        if request.POST.has_key('selected_presentation'):
+            for pres in Presentation.objects.filter(pk__in = request.POST.getlist('selected_presentation')):
+                pres.selected_presentation.add(request.user.userprofile_set.get())
+        presentations = presentations.filter(selected_presentation = request.user ).order_by('start')
+        template = 'show_all_presentations.html'
+
+    #process get requests
+    if request.method == 'GET':
+        if request.GET.has_key('selected_presentation'):
+            presentations = presentations.filter(selected_presentation = request.user ).order_by('start')
+        if request.GET.has_key('day'):
+            day = request.GET['day']
+        if request.GET.has_key('location'):
+            location= request.GET['location']
+        if request.GET.has_key('cat'):
+            cat = request.GET['cat']
+        if request.GET.has_key('audience'):
+            audience = request.GET['audience']
+
     if day:
         d = day.rsplit("-")
         date = datetime(int(d[0]), int(d[1]), int(d[2]))
-        presentations = Presentation.objects.filter(status=Status.objects.get(name='Approved')).filter(start__month=date.month).filter(start__day=date.day).order_by('start')
+        presentations = presentations.filter(status=Status.objects.get(name='Approved')).filter(start__month=date.month).filter(start__day=date.day).order_by('start')
         extra = date
         template = 'show_presentation_day.html'
     elif location:
         room = Room.objects.filter(id=location)[0]
         extra = room.name
         roomImage = room.here
-        presentations = Presentation.objects.filter(status=Status.objects.get(name='Approved')).filter(location__id=location).order_by('start')
+        presentations = presentations.filter(status=Status.objects.get(name='Approved')).filter(location__id=location).order_by('start')
         template = 'show_presentation_room.html'
     elif cat:
         cat = Category.objects.filter(id=cat)[0]
-        presentations = Presentation.objects.filter(status=Status.objects.get(name='Approved')).filter(cat=cat).order_by('start')
+        presentations = presentations.filter(status=Status.objects.get(name='Approved')).filter(cat=cat).order_by('start')
         extra = { 'name': cat.name, 'description': cat.description }
 
         template = 'show_presentation_cat.html'
     elif audience:
         audience = AudienceType.objects.filter(id=audience)[0]
 
-        presentations = Presentation.objects.filter(status=Status.objects.get(name='Approved')).filter(audiences=audience).order_by('start')
+        presentations = presentations.filter(status=Status.objects.get(name='Approved')).filter(audiences=audience).order_by('start')
         extra = { 'name': audience.name, 'description': audience.description }
 
         template = 'show_presentation_audience.html'
-    else:
-        presentations = Presentation.objects.filter(status=Status.objects.get(name='Approved')).order_by('start')
-        template = 'show_all_presentations.html'
 
     return render_to_response(template, {'day': date, 'presentations': presentations, 'extra': extra, 'roomImage': roomImage }, context_instance=RequestContext(request))
 

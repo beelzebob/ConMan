@@ -40,11 +40,15 @@ $(document).ready(function(){
 
 <h2>Presentations</h2>
 
+<form method="POST" action=".">
 {% for pres in presentations %}
 	{% ifchanged pres.start %}
 		<h3><a style="text-decoration: none; color: #44a;" href="/presentation/schedule/{{ pres.start|date:"Y-m-d" }}">{{ pres.start|date:"M d, g:i a" }}</a></h3>
     {% endifchanged %}
-		<p><a href="/presentation/{{ pres.id }}/">{{ pres.title }}</a> by
+
+		<p>
+        <input type="checkbox" name="selected_presentation" value="{{pres.id}}">
+        <a href="/presentation/{{ pres.id }}/">{{ pres.title }}</a> by
 		{% for pres in pres.presenter.all %}
 			{% if pres.user.first_name %}
 			<a href="/speaker/{{ pres.user.id }}/">{{ pres.user.first_name }} {{ pres.user.last_name }}</a>{% if not forloop.last %}, {% endif %}
@@ -54,6 +58,8 @@ $(document).ready(function(){
 		{% endfor %}
 		</p>
  {% endfor %}
+ <input type="submit" value="I plan to attend selected presentations">
+ </form>
 
 {% endblock primaryContent%}
 

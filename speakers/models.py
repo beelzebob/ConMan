@@ -130,6 +130,7 @@ class Presentation(models.Model):
     start = models.DateTimeField(blank=True, null=True)
     end = models.DateTimeField(blank=True, null=True)
     location = models.ForeignKey(Room, blank=True, null=True)
+    selected_presentation = models.ManyToManyField(UserProfile, related_name="selected_presentation",blank=True)
 
     def __unicode__(self):
         return self.title + " " + str(self.cat.name) + " " + str(self.status.name)
